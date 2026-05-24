@@ -121,3 +121,18 @@ export interface SyncRun {
   status: SyncRunStatus;
   details: Record<string, unknown>;
 }
+
+
+export interface TournamentDomainModel {
+  teams: Team[];
+  tournament_rule_versions: TournamentRuleVersion[];
+  groups: Group[];
+  group_team_assignments: GroupTeamAssignment[];
+  matches: Match[];
+  standings: Standing[];
+  simulation_snapshots: SimulationSnapshot[];
+  simulation_snapshot_matches: SimulationSnapshotMatch[];
+  tie_resolution_decisions: TieResolutionDecision[];
+  sync_sources: SyncSource[];
+  sync_runs: SyncRun[];
+}

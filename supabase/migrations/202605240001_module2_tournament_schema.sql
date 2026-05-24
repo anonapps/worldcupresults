@@ -190,3 +190,18 @@ create policy "Public read simulation_snapshot_matches" on public.simulation_sna
 create policy "Public read tie_resolution_decisions" on public.tie_resolution_decisions for select to anon using (true);
 
 comment on table public.simulation_snapshots is 'Immutable snapshot rows. Treat as append-only from application layer.';
+
+
+create or replace function public.prevent_simulation_snapshot_mutation()
+returns trigger
+language plpgsql
+as $$
+begin
+  raise exception 'simulation_snapshots are immutable';
+end;
+$$;
+
+drop trigger if exists trg_prevent_simulation_snapshot_update on public.simulation_snapshots;
+create trigger trg_prevent_simulation_snapshot_update
+before update or delete on public.simulation_snapshots
+for each row execute function public.prevent_simulation_snapshot_mutation();
