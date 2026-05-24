@@ -71,7 +71,7 @@ export class DeterministicTournamentEngine implements TournamentEngineService {
     }
 
     return [...grouped.entries()].map(([groupId, byTeam]) => {
-      const rows = [...byTeam.values()].sort((a, b) => b.points - a.points || a.teamId.localeCompare(b.teamId));
+      const rows = [...byTeam.values()].sort((a, b) => b.points - a.points);
       const buckets = new Map<number, string[]>();
       for (const row of rows) {
         const bucket = buckets.get(row.points) ?? [];
