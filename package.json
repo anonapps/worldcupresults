@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint . --max-warnings=0",
-    "test": "echo \"No tests configured yet\"",
+    "test": "rm -rf .test-dist && tsc -p tsconfig.test.json && printf '{\"type\":\"commonjs\"}' > .test-dist/package.json && node --test .test-dist/tests/**/*.test.js",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
