@@ -84,9 +84,9 @@ export class RepositorySyncPersistenceAdapter implements SyncPersistenceAdapter 
   ) {}
 
   async persist(dataset: NormalizedDataset): Promise<PersistenceSummary> {
+    const teams = await this.repository.upsertTeams(dataset.teams);
+    const tournamentRuleVersions = await this.repository.upsertTournamentRuleVersions(dataset.tournamentRuleVersions);
     const operations = await buildPersistenceOperations(dataset, this.teamLookup);
-    const teams = await this.repository.upsertTeams(operations.teams);
-    const tournamentRuleVersions = await this.repository.upsertTournamentRuleVersions(operations.tournamentRuleVersions);
     const matches = await this.repository.upsertMatches(operations.matches);
     return { teams, tournamentRuleVersions, matches };
   }
