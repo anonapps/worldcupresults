@@ -4,8 +4,8 @@ export class ManualAdminImportSourceAdapter implements WorldCupSourceAdapter {
   readonly provider = "manual_admin_import" as const;
 
   constructor(
-    readonly sourceName = "manual_admin_import",
     private readonly payload: SourcePayload,
+    readonly sourceName = "manual_admin_import",
   ) {}
 
   async fetch(_context: SourceFetchContext): Promise<SourcePayload> {
