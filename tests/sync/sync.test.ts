@@ -29,7 +29,7 @@ const payload: SourcePayload = {
   watermark: "snapshot-1",
   teams: [
     { providerTeamId: "arg", fifaCode: "ARG", name: "Argentina", flagUrl: "https://example.com/arg.svg", confederation: "CONMEBOL" },
-    { providerTeamId: "esp", fifaCode: "ESP", name: "España", flagUrl: "https://example.com/esp.svg", confederation: "UEFA" },
+    { providerTeamId: "esp", fifaCode: "ESP", name: "Espana", flagUrl: "https://example.com/esp.svg", confederation: "UEFA" },
   ],
   matches: [
     {
@@ -155,7 +155,7 @@ test("orchestrates sync run lifecycle with audit hooks", async () => {
   );
 
   const service = new SyncOrchestrationService(
-    [new ManualAdminImportSourceAdapter("manual_admin_import", payload)],
+    [new ManualAdminImportSourceAdapter(payload, "manual_admin_import")],
     makeSources(),
     runs,
     persistence,
