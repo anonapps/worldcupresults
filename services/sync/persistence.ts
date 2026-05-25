@@ -8,8 +8,8 @@ import type {
   UUID,
 } from "./types";
 
-export interface TeamUpsert extends NormalizedTeam {}
-export interface TournamentRuleVersionUpsert extends NormalizedTournamentRuleVersion {}
+export type TeamUpsert = NormalizedTeam;
+export type TournamentRuleVersionUpsert = NormalizedTournamentRuleVersion;
 
 export interface MatchUpsert {
   tournament_rule_version_id: UUID;
