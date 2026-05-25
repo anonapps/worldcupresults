@@ -62,7 +62,9 @@ export class SyncOrchestrationService {
     });
 
     let lastError: unknown;
+    let attempts = 0;
     for (let attempt = 1; attempt <= this.retryPolicy.maxAttempts; attempt += 1) {
+      attempts = attempt;
       try {
         const payload = await adapter.fetch({
           source,
@@ -104,14 +106,14 @@ export class SyncOrchestrationService {
     }
 
     const failedRun = await this.runs.fail(run.id, {
-      attempts: this.retryPolicy.maxAttempts,
+      attempts,
       error: lastError instanceof Error ? lastError.message : String(lastError),
     });
     await this.audit.record({
       type: "sync_failed",
       sourceName: source.source_name,
       runId: run.id,
-      attempt: this.retryPolicy.maxAttempts,
+      attempt: attempts,
       at: this.clock.now(),
       details: failedRun.details,
     });
