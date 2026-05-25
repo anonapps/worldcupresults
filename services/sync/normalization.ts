@@ -45,14 +45,15 @@ export const normalizeSourcePayload = (
     assertIsoDate(match.scheduledAt, "scheduledAt");
     const homeCode = teamCodesByProviderId.get(match.homeTeamProviderId);
     const awayCode = teamCodesByProviderId.get(match.awayTeamProviderId);
-    const winnerCode = match.winnerTeamProviderId ? teamCodesByProviderId.get(match.winnerTeamProviderId) : null;
     const effectiveRuleVersionId = match.tournamentRuleVersionId ?? tournamentRuleVersionId;
+    let winnerCode: string | null = null;
 
     if (!effectiveRuleVersionId) throw new NormalizationError(`Missing tournament rule version for match ${match.providerMatchId}`);
     if (!homeCode) throw new NormalizationError(`Unknown home team ${match.homeTeamProviderId} for match ${match.providerMatchId}`);
     if (!awayCode) throw new NormalizationError(`Unknown away team ${match.awayTeamProviderId} for match ${match.providerMatchId}`);
-    if (match.winnerTeamProviderId && !winnerCode) {
-      throw new NormalizationError(`Unknown winner team ${match.winnerTeamProviderId} for match ${match.providerMatchId}`);
+    if (match.winnerTeamProviderId) {
+      winnerCode = teamCodesByProviderId.get(match.winnerTeamProviderId) ?? null;
+      if (!winnerCode) throw new NormalizationError(`Unknown winner team ${match.winnerTeamProviderId} for match ${match.providerMatchId}`);
     }
     if (winnerCode && winnerCode !== homeCode && winnerCode !== awayCode) {
       throw new NormalizationError(`Winner team must be home or away for match ${match.providerMatchId}`);
