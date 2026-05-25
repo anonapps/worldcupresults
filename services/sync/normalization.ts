@@ -46,7 +46,9 @@ export const normalizeSourcePayload = (
     const homeCode = teamCodesByProviderId.get(match.homeTeamProviderId);
     const awayCode = teamCodesByProviderId.get(match.awayTeamProviderId);
     const winnerCode = match.winnerTeamProviderId ? teamCodesByProviderId.get(match.winnerTeamProviderId) : null;
+    const effectiveRuleVersionId = match.tournamentRuleVersionId ?? tournamentRuleVersionId;
 
+    if (!effectiveRuleVersionId) throw new NormalizationError(`Missing tournament rule version for match ${match.providerMatchId}`);
     if (!homeCode) throw new NormalizationError(`Unknown home team ${match.homeTeamProviderId} for match ${match.providerMatchId}`);
     if (!awayCode) throw new NormalizationError(`Unknown away team ${match.awayTeamProviderId} for match ${match.providerMatchId}`);
     if (match.winnerTeamProviderId && !winnerCode) {
@@ -57,7 +59,7 @@ export const normalizeSourcePayload = (
     }
 
     return {
-      tournament_rule_version_id: match.tournamentRuleVersionId ?? tournamentRuleVersionId,
+      tournament_rule_version_id: effectiveRuleVersionId,
       stage: match.stage,
       group_id: match.groupId,
       home_team_fifa_code: homeCode,
