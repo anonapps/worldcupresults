@@ -21,7 +21,7 @@ export interface SimulationReadRepository {
 }
 export interface SimulationWriteRepository {
   createSnapshot(input: CreateSimulationInput): Promise<SimulationSnapshotRecord>;
-  materializeSnapshotMatches(snapshotId: string, matches: EngineMatch[], selections: MatchSelections): Promise<void>;
+  createSnapshotSelections(snapshotId: string, selections: MatchSelections): Promise<void>;
   createTieDecisions(snapshotId: string, decisions: TieResolutionSubmission[]): Promise<void>;
 }
 export type SimulationRepository = SimulationReadRepository & SimulationWriteRepository;

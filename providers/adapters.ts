@@ -50,7 +50,7 @@ export class ManualAdminImportAdapter extends BaseAdapter {
     });
   }
 
-  async pull(): Promise<ProviderPullResult> {
+  async pull(_ctx: ProviderContext): Promise<ProviderPullResult> {
     return this.emptyResult(null);
   }
 }

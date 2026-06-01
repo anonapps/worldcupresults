@@ -11,7 +11,7 @@ export class SimulatorService {
     const matches = await this.repo.getMatchesForRuleVersion(input.tournamentRuleVersionId);
     if (matches.length === 0) throw new ValidationError("No matches found for tournament rule version");
     const snapshot = await this.repo.createSnapshot(input);
-    await this.repo.materializeSnapshotMatches(snapshot.id, matches, {});
+    await this.repo.createSnapshotSelections(snapshot.id, {});
     return snapshot;
   }
 
@@ -25,14 +25,14 @@ export class SimulatorService {
     const reconstructed = await this.reconstruct(snapshotId);
     const result = this.engine.applyMutation(reconstructed.state, { matchId: input.matchId, selection: input.selection });
     const next = await this.repo.createSnapshot({ tournamentRuleVersionId: reconstructed.snapshot.tournamentRuleVersionId, mode: reconstructed.snapshot.mode, metadata: { parentSnapshotId: snapshotId, createdBy: "predict", at: this.now() } });
-    await this.repo.materializeSnapshotMatches(next.id, result.state.matches, result.state.selections);
+    await this.repo.createSnapshotSelections(next.id, result.state.selections);
     return { snapshot: next, state: result.state };
   }
 
   async submitTieResolution(snapshotId: string, submissions: TieResolutionSubmission[]): Promise<SnapshotReconstruction> {
     const reconstructed = await this.reconstruct(snapshotId);
     const next = await this.repo.createSnapshot({ tournamentRuleVersionId: reconstructed.snapshot.tournamentRuleVersionId, mode: reconstructed.snapshot.mode, metadata: { parentSnapshotId: snapshotId, createdBy: "tie-resolution", at: this.now() } });
-    await this.repo.materializeSnapshotMatches(next.id, reconstructed.state.matches, reconstructed.state.selections);
+    await this.repo.createSnapshotSelections(next.id, reconstructed.state.selections);
     await this.repo.createTieDecisions(next.id, submissions);
     return this.reconstruct(next.id);
   }
