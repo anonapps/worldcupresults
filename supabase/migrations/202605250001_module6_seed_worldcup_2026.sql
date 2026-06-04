@@ -46,25 +46,37 @@ with canonical_rule_version as (
     ('ABQ','Slot 41','https://example.com/flags/abq.svg','TBD'),('ABR','Slot 42','https://example.com/flags/abr.svg','TBD'),('ABS','Slot 43','https://example.com/flags/abs.svg','TBD'),('ABT','Slot 44','https://example.com/flags/abt.svg','TBD'),
     ('ABU','Slot 45','https://example.com/flags/abu.svg','TBD'),('ABV','Slot 46','https://example.com/flags/abv.svg','TBD'),('ABW','Slot 47','https://example.com/flags/abw.svg','TBD'),('ABX','Slot 48','https://example.com/flags/abx.svg','TBD')
   on conflict (fifa_code) do nothing
-  returning id
+  returning id, fifa_code
 ), seeded_groups as (
   insert into public.groups (group_name, tournament_rule_version_id)
   select g.group_name, rv.id
   from selected_rule_version rv
   cross join (values ('A'),('B'),('C'),('D'),('E'),('F'),('G'),('H'),('I'),('J'),('K'),('L')) as g(group_name)
   on conflict (tournament_rule_version_id, group_name) do nothing
-  returning id
+  returning id, group_name
 ), group_slots as (
   select
     g.id as group_id,
     g.group_name,
     row_number() over (order by g.group_name) as group_num
-  from public.groups g
-  join selected_rule_version rv on rv.id = g.tournament_rule_version_id
+  from (
+    select existing_groups.id, existing_groups.group_name
+    from public.groups existing_groups
+    join selected_rule_version rv on rv.id = existing_groups.tournament_rule_version_id
+    union all
+    select seeded_groups.id, seeded_groups.group_name
+    from seeded_groups
+  ) g
 ), ordered_teams as (
   select id, row_number() over (order by fifa_code) as rn
-  from public.teams
-  where fifa_code between 'AAA' and 'ABX'
+  from (
+    select existing_teams.id, existing_teams.fifa_code
+    from public.teams existing_teams
+    where existing_teams.fifa_code between 'AAA' and 'ABX'
+    union all
+    select seeded_teams.id, seeded_teams.fifa_code
+    from seeded_teams
+  ) teams
 ), seeded_assignments as (
   insert into public.group_team_assignments (group_id, team_id, seed_order)
   select gs.group_id, ot.id, slot.seed_order
@@ -72,7 +84,7 @@ with canonical_rule_version as (
   join lateral (values (1),(2),(3),(4)) as slot(seed_order) on true
   join ordered_teams ot on ot.rn = ((gs.group_num - 1) * 4 + slot.seed_order)
   on conflict (group_id, team_id) do nothing
-  returning id
+  returning group_id, team_id, seed_order
 ), group_matches as (
   insert into public.matches (
     tournament_rule_version_id, stage, group_id, home_team_id, away_team_id,
@@ -81,7 +93,7 @@ with canonical_rule_version as (
   select
     rv.id,
     'group'::public.match_stage,
-    g.id,
+    g.group_id,
     t1.team_id,
     t2.team_id,
     ('2026-06-11T12:00:00Z'::timestamptz + (((row_number() over (order by g.group_name, p.pair_no)) - 1) * interval '1 day')),
@@ -91,15 +103,21 @@ with canonical_rule_version as (
     null,
     false
   from selected_rule_version rv
-  join public.groups g on g.tournament_rule_version_id = rv.id
+  join group_slots g on true
   join lateral (
     select
       max(case when gta.seed_order = 1 then gta.team_id end) as s1,
       max(case when gta.seed_order = 2 then gta.team_id end) as s2,
       max(case when gta.seed_order = 3 then gta.team_id end) as s3,
       max(case when gta.seed_order = 4 then gta.team_id end) as s4
-    from public.group_team_assignments gta
-    where gta.group_id = g.id
+    from (
+      select existing_assignments.group_id, existing_assignments.team_id, existing_assignments.seed_order
+      from public.group_team_assignments existing_assignments
+      union all
+      select seeded_assignments.group_id, seeded_assignments.team_id, seeded_assignments.seed_order
+      from seeded_assignments
+    ) gta
+    where gta.group_id = g.group_id
   ) seeds on true
   join lateral (
     values
